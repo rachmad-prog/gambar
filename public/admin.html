@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Admin - Riwayat Lokasi</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        background-color: #f4f6f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #eef2f5;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+      }
+      h2 {
+        margin: 0;
+        color: #333;
+      }
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+      }
+      .btn-refresh {
+        background-color: #007bff;
+        color: white;
+      }
+      .btn-refresh:hover {
+        background-color: #0056b3;
+      }
+      .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        margin-left: 10px;
+      }
+      .btn-delete:hover {
+        background-color: #bd2130;
+      }
+      .btn-map {
+        background-color: #28a745;
+        color: white;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        display: inline-block;
+      }
+      .btn-map:hover {
+        background-color: #218838;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #eef2f5;
+      }
+      th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+      }
+      tr:hover {
+        background-color: #f1f5f9;
+      }
+      .badge {
+        background-color: #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #475569;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>📍 Dashboard Riwayat Lokasi</h2>
+        <div>
+          <button class="btn btn-refresh" onclick="muatData()">
+            🔄 Refresh
+          </button>
+          <button class="btn btn-delete" onclick="hapusSemuaData()">
+            🗑️ Hapus Semua Log
+          </button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Waktu Masuk</th>
+            <th>Koordinat (Lat, Lng)</th>
+            <th>Akurasi</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-body">
+          <!-- Data lokasi akan dimuat secara dinamis di sini -->
+        </tbody>
+      </table>
+
+      <div id="empty-msg" class="empty-state" style="display: none">
+        Belum ada data lokasi yang terekam.
+      </div>
+    </div>
+
+    <script>
+      function muatData() {
+        fetch("/api/lihat-lokasi")
+          .then((res) => res.json())
+          .then((data) => {
+            const tbody = document.getElementById("tabel-body");
+            const emptyMsg = document.getElementById("empty-msg");
+            tbody.innerHTML = "";
+
+            if (!data || data.length === 0) {
+              emptyMsg.style.display = "block";
+              return;
+            }
+
+            emptyMsg.style.display = "none";
+
+            data.forEach((item, index) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item.waktu || "-"}</td>
+                        <td><b>${item.latitude}, ${item.longitude}</b></td>
+                        <td><span class="badge">±${item.akurasi_meter || 0} meter</span></td>
+                        <td>
+                            <a href="${item.maps}" target="_blank" class="btn-map">
+                                🗺️ Buka di Google Maps
+                            </a>
+                        </td>
+                    `;
+              tbody.appendChild(row);
+            });
+          })
+          .catch((err) => {
+            console.error("Gagal mengambil data:", err);
+          });
+      }
+
+      function hapusSemuaData() {
+        if (
+          confirm("Apakah Anda yakin ingin menghapus semua riwayat lokasi?")
+        ) {
+          fetch("/api/hapus-lokasi", { method: "DELETE" })
+            .then((res) => res.json())
+            .then(() => {
+              muatData();
+            });
+        }
+      }
+
+      // Muat data pertama kali halaman dibuka
+      muatData();
+
+      // Otomatis refresh data setiap 10 detik
+      setInterval(muatData, 10000);
+    </script>
+  </body>
+</html>
