@@ -6,10 +6,8 @@ const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
-// Masukkan Connection String dari Neon Dashboard Anda
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  "postgresql://neondb_owner:npg_yuY0irR6WFBm@ep-frosty-bird-az9iwxmp-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+// Ambil URL koneksi murni dari Environment Variable Vercel / .env
+const DATABASE_URL = process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
@@ -76,6 +74,6 @@ module.exports = app;
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(3000, () =>
-    console.log("Server berjalan di https://aa-sayang-oneng.vercel.app"),
+    console.log("Server lokal berjalan di http://localhost:3000"),
   );
 }

