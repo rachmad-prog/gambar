@@ -24,7 +24,7 @@ app.post("/api/simpan-lokasi", async (req, res) => {
 
   try {
     const query = `
-      INSERT INTO lokasi_log (waktu, latitude, longitude, akurasi_meter, maps)
+      INSERT INTO riwayat_lokasi (waktu, latitude, longitude, akurasi_meter, maps)
       VALUES ($1, $2, $3, $4, $5)
     `;
     await pool.query(query, [waktu, latitude, longitude, akurasi, maps]);
@@ -42,7 +42,7 @@ app.post("/api/simpan-lokasi", async (req, res) => {
 app.get("/api/lihat-lokasi", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM lokasi_log ORDER BY id DESC",
+      "SELECT * FROM riwayat_lokasi ORDER BY id DESC",
     );
     res.json(result.rows);
   } catch (err) {
@@ -54,7 +54,7 @@ app.get("/api/lihat-lokasi", async (req, res) => {
 // 3. ENDPOINT HAPUS LOKASI
 app.delete("/api/hapus-lokasi", async (req, res) => {
   try {
-    await pool.query("TRUNCATE TABLE lokasi_log");
+    await pool.query("TRUNCATE TABLE riwayat_lokasi");
     res.json({ status: "success" });
   } catch (err) {
     res.status(500).json({ status: "error", message: err.message });

@@ -127,7 +127,7 @@
           </tr>
         </thead>
         <tbody id="tabel-body">
-          <!-- Data lokasi dimuat di sini -->
+          <!-- Data lokasi akan dimuat secara dinamis -->
         </tbody>
       </table>
 
@@ -156,12 +156,12 @@
             emptyMsg.style.display = "none";
 
             data.forEach((item, index) => {
-              // Jika tautan maps dari server tidak tersedia, buat tautan otomatis dari lat & lng
+              // Jika tautan maps tidak disertakan dari server, buat tautan otomatis
               const linkMaps =
                 item.maps ||
                 `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
 
-              // Format tampilan waktu agar lebih nyaman dibaca (Opsional)
+              // Format tampilan waktu ke bahasa Indonesia
               const waktuTampil = item.waktu
                 ? new Date(item.waktu).toLocaleString("id-ID")
                 : "-";
@@ -182,7 +182,7 @@
             });
           })
           .catch((err) => {
-            console.error("Gagal mengambil data:", err);
+            console.error("Gagal memuat data:", err);
           });
       }
 
@@ -199,16 +199,15 @@
               muatData();
             })
             .catch((err) => {
-              console.error("Gagal menghapus:", err);
+              console.error("Gagal menghapus log lokasi:", err);
               alert("Terjadi kesalahan saat menghapus data.");
             });
         }
       }
 
-      // Muat data pertama kali saat halaman terbuka
       window.onload = function () {
         muatData();
-        // Otomatis refresh data setiap 10 detik
+        // Otomatis memperbarui tabel setiap 10 detik
         setInterval(muatData, 10000);
       };
     </script>
