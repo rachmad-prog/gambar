@@ -18,7 +18,18 @@ const pool = new Pool({
 app.post("/api/simpan-lokasi", async (req, res) => {
   const { latitude, longitude, akurasi_meter } = req.body;
 
-  const waktu = new Date().toLocaleString("id-ID");
+  // Validasi data agar tidak memasukkan nilai kosong
+  if (!latitude || !longitude) {
+    return res
+      .status(400)
+      .json({
+        status: "error",
+        message: "Koordinat latitude & longitude wajib diisi",
+      });
+  }
+
+  // Gunakan ISO String agar kompatibel dengan TIMESTAMP PostgreSQL
+  const waktu = new Date().toISOString();
   const akurasi = Math.round(akurasi_meter || 0);
   const maps = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
@@ -28,6 +39,7 @@ app.post("/api/simpan-lokasi", async (req, res) => {
       VALUES ($1, $2, $3, $4, $5)
     `;
     await pool.query(query, [waktu, latitude, longitude, akurasi, maps]);
+
     res.json({
       status: "success",
       message: "Lokasi berhasil disimpan ke Neon",
@@ -47,7 +59,7 @@ app.get("/api/lihat-lokasi", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error("Gagal ambil data:", err);
-    res.json([]);
+    res.status(500).json({ status: "error", message: err.message });
   }
 });
 
@@ -74,6 +86,6 @@ module.exports = app;
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(3000, () =>
-    console.log("Server lokal berjalan di https://aa-sayang-oneng.vercel.app"),
+    console.log("Server lokal berjalan di http://localhost:3000"),
   );
 }
