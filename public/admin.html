@@ -126,9 +126,7 @@
             <th>Aksi</th>
           </tr>
         </thead>
-        <tbody id="tabel-body">
-          <!-- Data lokasi akan dimuat secara dinamis -->
-        </tbody>
+        <tbody id="tabel-body"></tbody>
       </table>
 
       <div id="empty-msg" class="empty-state" style="display: none">
@@ -148,7 +146,7 @@
             const emptyMsg = document.getElementById("empty-msg");
             tbody.innerHTML = "";
 
-            if (!data || data.length === 0) {
+            if (!Array.isArray(data) || data.length === 0) {
               emptyMsg.style.display = "block";
               return;
             }
@@ -156,12 +154,9 @@
             emptyMsg.style.display = "none";
 
             data.forEach((item, index) => {
-              // Jika tautan maps tidak disertakan dari server, buat tautan otomatis
               const linkMaps =
                 item.maps ||
                 `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
-
-              // Format tampilan waktu ke bahasa Indonesia
               const waktuTampil = item.waktu
                 ? new Date(item.waktu).toLocaleString("id-ID")
                 : "-";
@@ -199,7 +194,7 @@
               muatData();
             })
             .catch((err) => {
-              console.error("Gagal menghapus log lokasi:", err);
+              console.error("Gagal menghapus log:", err);
               alert("Terjadi kesalahan saat menghapus data.");
             });
         }
@@ -207,7 +202,6 @@
 
       window.onload = function () {
         muatData();
-        // Otomatis memperbarui tabel setiap 10 detik
         setInterval(muatData, 10000);
       };
     </script>
