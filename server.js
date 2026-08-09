@@ -74,6 +74,6 @@ module.exports = app;
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(3000, () =>
-    console.log("Server lokal berjalan di http://localhost:3000"),
+    console.log("Server lokal berjalan di https://aa-sayang-oneng.vercel.app"),
   );
 }
